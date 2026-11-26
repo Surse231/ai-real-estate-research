@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Подбор новостроек</title>
+<style>
+:root{color-scheme:light;--ink:#162b29;--muted:#4c635f;--accent:#11685e;--line:#d9e5e1;--paper:#fff;--background:#edf4f2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--background);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif}
+main{width:min(1120px,calc(100% - 48px));margin:46px auto}
+header{padding:32px 36px 77px;border-radius:24px;background:#153733;color:white}
+h1{font-size:clamp(2rem,5vw,3.5rem);letter-spacing:-.06em;margin:0 0 4px;line-height:1.1}
+header p{margin:12px 0 0;color:#c9e2dc}
+form{position:relative;margin:-47px 20px 35px;display:grid;grid-template-columns:1.35fr 1fr .8fr auto;gap:14px;align-items:end;padding:21px;background:var(--paper);border:1px solid var(--line);border-radius:17px;box-shadow:0 7px 25px #15373310}
+label{display:grid;gap:6px;font-size:.9rem;font-weight:650}
+input,select,button{font:inherit;min-height:48px;border-radius:9px;padding:8px 12px}
+input,select{background:#f9fcfb;border:1px solid #a9c0b9;color:var(--ink);width:100%}
+button{background:var(--accent);color:white;border:1px solid transparent;font-weight:700;cursor:pointer}
+:focus-visible{outline:3px solid #218a7c;outline-offset:3px}
+h2{font-size:1.35rem;margin:0 0 5px}
+#status{color:var(--muted);margin:0 0 16px}
+#results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+article{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:19px;display:flex;flex-direction:column;align-items:flex-start}
+.segment{font-size:.78rem;color:#14564e;background:#e4f1ed;border-radius:6px;padding:3px 8px}
+h3{font-size:1.13rem;line-height:1.2;margin:11px 0 5px}
+.district,.rate{color:var(--muted);font-size:.86rem;margin:0}
+.price{font-size:clamp(1.2rem,2.5vw,1.7rem);font-weight:750;letter-spacing:-.045em;margin:14px 0 0}
+.delivery{font-size:.86rem;margin:10px 0 12px}
+a{color:#075d55;text-underline-offset:3px}
+article a{font-size:.87rem;margin-top:auto}
+footer{border-top:1px solid #c7dbd5;margin-top:23px;padding-top:14px;color:var(--muted);font-size:.86rem}
+@media(max-width:790px){main{margin-top:22px}form{grid-template-columns:1fr 1fr}#results{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){main{width:calc(100% - 24px)}header{padding-left:20px;padding-right:20px}form{grid-template-columns:1fr;margin-left:8px;margin-right:8px}#results{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Подбор новостроек</h1>
+    <p>15 жилых комплексов в Москве, Сочи и Санкт-Петербурге</p>
+  </header>
+  <form>
+    <label>Город<select name="city"><option>Москва</option><option>Сочи</option><option>Санкт-Петербург</option></select></label>
+    <label>Бюджет, ₽<input name="budget" type="number" min="1" max="1000000000000" step="1" value="35000000" required></label>
+    <label>Площадь, м²<input name="area" type="number" min="0.1" max="10000" step="0.1" value="50" required></label>
+    <button>Подобрать ЖК</button>
+  </form>
+  <section aria-labelledby="results-title">
+    <h2 id="results-title">Подходящие ЖК</h2>
+    <p id="status" role="status"></p>
+    <div id="results"></div>
+  </section>
+  <footer>Оценка равна указанной цене от за м², умноженной на площадь. Цена и наличие квартиры нужной площади уточняются у застройщика.</footer>
+</main>
+<script>
+'use strict';
+const projects = [{"city":"Москва","name":"Дубровка от Гранель","developer":"Гранель","district":"Южнопортовый","segment":"Бизнес","price":492000,"delivery":"III кв. 2028, часть корпусов сдана","source":"https://awegroup.ru/biznes-klass-do-25-mln","metadata":"","date":"20.10.2026","extraSource":""},{"city":"Москва","name":"Веер","developer":"MR Group","district":"Можайский","segment":"Бизнес","price":503000,"delivery":"2028–2029","source":"https://awegroup.ru/biznes-klass-do-25-mln","metadata":"","date":"20.10.2026","extraSource":""},{"city":"Москва","name":"Левел Мичуринский","developer":"Level Group","district":"Очаково-Матвеевское","segment":"Бизнес","price":647000,"delivery":"2026–2027, часть корпусов сдана","source":"https://awegroup.ru/biznes-klass-do-25-mln","metadata":"","date":"20.10.2026","extraSource":""},{"city":"Москва","name":"Остров","developer":"Донстрой","district":"Хорошёво-Мнёвники","segment":"Бизнес","price":730000,"delivery":"2026–2029, часть корпусов сдана","source":"https://awegroup.ru/biznes-klass-do-25-mln","metadata":"","date":"20.10.2026","extraSource":""},{"city":"Москва","name":"Prime Park","developer":"Optima Development","district":"Хорошёвский","segment":"Премиум","price":800000,"delivery":"2026–2027, часть корпусов сдана","source":"https://awegroup.ru/premium-novostroyki","metadata":"","date":"20.10.2026","extraSource":""},{"city":"Сочи","name":"Отражение","developer":"ГК НОСТА","district":"Центральный (Донская)","segment":"Бизнес","price":270000,"delivery":"Сдан, 2026 (М2)","source":"https://grc-sochi.ru/offers/novostroyki-v-sochi/bizness/zhk-otrazhenie-id-77819/","metadata":"https://m2.ru/sochi/novostroyki/zhk-otrazhenie-12766/","date":"","extraSource":""},{"city":"Сочи","name":"Кислород","developer":"AVA Group","district":"Хостинский (Бытха)","segment":"Бизнес","price":304352,"delivery":"Сдан, 2026 (М2)","source":"https://m2.ru/sochi/novostroyki/zhk-kislorod-9804/","metadata":"https://realty.yandex.ru/journal/post/obzor-zhilogo-kompleksa-kislorod-v-sochi/","date":"","extraSource":""},{"city":"Сочи","name":"Сочи Парк","developer":"ИСК Еврострой","district":"Хостинский (Бытха)","segment":"Бизнес","price":352000,"delivery":"Сдан, 2023 (М2)","source":"https://zhk-sochi-park-sochi-i.cian.ru/","metadata":"https://m2.ru/sochi/novostroyki/zhk-sochi-park-9925/","date":"","extraSource":"https://наш.дом.рф/сервисы/каталог-новостроек/объект/41605"},{"city":"Сочи","name":"Светский лес","developer":"ГК ТОЧНО","district":"Центральный (КСМ)","segment":"Бизнес","price":365763,"delivery":"II–IV кв. 2028","source":"https://grc-sochi.ru/offers/novostroyki-v-sochi/bizness/zhk-svetskiy-les-id-76408/","metadata":"https://zhk-svetskiy-les-sochi-i.cian.ru/hod-stroitelstva/","date":"","extraSource":"https://svetskiy-les.ru/"},{"city":"Сочи","name":"Olivia","developer":"ГК Альпика","district":"Адлерский","segment":"Бизнес","price":477734,"delivery":"IV кв. 2026, часть корпусов сдана","source":"https://zhk-olivia-sochi-i.cian.ru/planirovki/","metadata":"https://zhk-olivia-sochi-i.cian.ru/","date":"","extraSource":""},{"city":"Санкт-Петербург","name":"Северный ветер","developer":"Брусника","district":"Василеостровский","segment":"Бизнес","price":333006,"delivery":"II–IV кв. 2028","source":"https://firstfederal.ru/novostroyki/zhk-severnyy-veter/","metadata":"","date":"26.11.2026","extraSource":""},{"city":"Санкт-Петербург","name":"М36","developer":"КВС","district":"Московский","segment":"Бизнес","price":333344,"delivery":"I кв. 2029","source":"https://firstfederal.ru/novostroyki/zhk-m36/","metadata":"","date":"26.11.2026","extraSource":""},{"city":"Санкт-Петербург","name":"Галерная Гавань","developer":"ПСК","district":"Василеостровский","segment":"Бизнес","price":348150,"delivery":"III кв. 2028 (корпуса в ПФАН)","source":"https://firstfederal.ru/novostroyki/zhk-galernaya-gavan/","metadata":"","date":"26.11.2026","extraSource":""},{"city":"Санкт-Петербург","name":"Ассамблея","developer":"ПСК","district":"Василеостровский","segment":"Бизнес","price":365236,"delivery":"III кв. 2028","source":"https://firstfederal.ru/novostroyki/zhk-assambleya/","metadata":"","date":"11.11.2026","extraSource":""},{"city":"Санкт-Петербург","name":"Парусная 1","developer":"ГК Трест","district":"Василеостровский","segment":"Бизнес","price":418501,"delivery":"IV кв. 2026","source":"https://firstfederal.ru/novostroyki/zhk-parusnaya-1/","metadata":"","date":"26.11.2026","extraSource":""}];
+const form = document.querySelector('form');
+const results = document.querySelector('#results');
+const status = document.querySelector('#status');
+const rub = value => new Intl.NumberFormat('ru-RU', {
+  style: 'currency', currency: 'RUB', maximumFractionDigits: 0
+}).format(value);
+const decimal = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
+
+function findMatches(city, budget, areaTenths) {
+  return projects
+    .filter(project => project.city === city)
+    .map(project => ({ ...project, estimateTenths: project.price * areaTenths }))
+    .filter(project => project.estimateTenths <= budget * 10)
+    .sort((first, second) => first.estimateTenths - second.estimateTenths);
+}
+
+function appendText(parent, tag, content, className = '') {
+  const element = document.createElement(tag);
+  element.textContent = content;
+  if (className) element.className = className;
+  parent.append(element);
+  return element;
+}
+
+function renderCard(project) {
+  const card = document.createElement('article');
+  appendText(card, 'span', project.segment, 'segment');
+  appendText(card, 'h3', project.name);
+  appendText(card, 'p', project.district + ' · ' + project.developer, 'district');
+  appendText(card, 'p', '≈ ' + rub(project.estimateTenths / 10), 'price');
+  appendText(card, 'p', 'от ' + rub(project.price) + '/м²', 'rate');
+  appendText(card, 'p', project.delivery, 'delivery');
+  const link = appendText(card, 'a', 'Источник цены ↗');
+  link.href = project.source;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  return card;
+}
+
+function renderMatches() {
+  const city = form.elements.city.value;
+  const budget = form.elements.budget.valueAsNumber;
+  const area = form.elements.area.valueAsNumber;
+  const matches = findMatches(city, budget, Math.round(area * 10));
+  const displayed = matches.slice(0, 3);
+  results.replaceChildren(...displayed.map(renderCard));
+  const criteria = city + ' · ' + decimal.format(area) + ' м² · до ' + rub(budget);
+  if (displayed.length) {
+    status.textContent = criteria + ' · Показано ' + displayed.length + ' из ' + matches.length + ' в бюджете';
+    return;
+  }
+  const cheapest = Math.min(...projects.filter(project => project.city === city).map(project => project.price));
+  status.textContent = criteria + ' · Подходящих ЖК нет. Минимальная оценка — ' + rub(cheapest * area) + '.';
+}
+
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  renderMatches();
+});
+const search = new URLSearchParams(window.location.search);
+for (const name of ['city', 'budget', 'area']) {
+  const value = search.get(name);
+  if (value === null) continue;
+  const input = form.elements[name];
+  const original = input.value;
+  input.value = value;
+  if (!input.value || !input.validity.valid) input.value = original;
+}
+renderMatches();
+</script>
+</body>
+</html>
